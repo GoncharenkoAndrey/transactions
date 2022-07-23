@@ -1,0 +1,22 @@
+.container {
+    padding-left: 100px;
+    padding-right: 100px;
+}
+.inputContainer {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+.inputLabel {
+    flex: 1;
+    margin-right: 5px;
+}
+.field {
+    flex: 1
+}
+#clientLabel, #amountLabel {
+    width: 45%;
+}
+ #client, #amount {
+    width: 55%;
+}
