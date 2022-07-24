@@ -15,7 +15,7 @@ function ImportExport({transactions, addTransaction}) {
           }, {});
           return obj;
         });
-        array.map((transaction) => {
+        array.forEach((element) => {
             addTransaction(transaction);
         });
     };

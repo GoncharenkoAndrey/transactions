@@ -7,7 +7,7 @@ import './App.css';
 
 function App() {
   return (
-    <div>
+    <div className="transactionsContainer">
       <Header />
       <div className = "actionsContainer">
         <Filter />

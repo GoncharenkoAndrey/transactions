@@ -1,21 +1,30 @@
-import React, {useState} from "react";
+import React, {useEffect, useState} from "react";
 import {connect} from "react-redux";
-import Button from "react-bootstrap/Button";
 import Table from "react-bootstrap/Table";
 import Pagination from "react-bootstrap/Pagination";
 import {editTransactionAction, deleteTransactionAction} from "../../reducers/transactions";
 import EditModal from "../EditModal";
 import DeleteModal from "../DeleteModal";
-import "./List.css";
+import Transaction from "../Transaction";
 
 function List({transactions, deleteTransaction, editTransaction}) {
     const [showDelete, setShowDelete] = useState(false);
     const [showEdit, setShowEdit] = useState(false);
     const [transactionId, setTransactionId] = useState(undefined);
-    const [startItem, setStartItem] = useState(1);
+    const [page, setPage] = useState(1);
+    const [pagesCount, setPagesCount] = useState(1);
     const onPage = 15;
 
     const keys = Object.keys(transactions);
+
+    useEffect(() => {
+        let pages = Math.floor(keys.length / onPage);
+        pages = pages >= 1 ? pages : 1;
+        if(keys.length - pages * onPage > 0) {
+            pages++;
+        }
+        setPagesCount(pages);
+    }, [transactions]);
 
     function editTransactionHandler(id) {
         setShowEdit(true);
@@ -42,23 +51,26 @@ function List({transactions, deleteTransaction, editTransaction}) {
         setShowDelete(false);
     }
 
+    function firstPage() {
+        setPage(1);
+    }
+
+    function lastPage() {
+        setPage(pagesCount);
+    }
+
+    function changePage(pageChange) {
+        setPage(page + pageChange);
+    }
+
     function setPageHandler(event) {
         const page = event.target.innerText;
-        let start = 1;
-        if(page > 1) {
-            start = (page - 1) * onPage + 1;
-        }
-        setStartItem(start);
+        setPage(page);
     }
 
     function renderPages() {
-        let pages = Math.floor(keys.length / onPage);
         const pageItems = [];
-        pages = pages >= 1 ? pages : 1;
-        if(keys.length - pages * onPage > 0) {
-            pages++;
-        }
-        for(let i = 1; i <= pages; i++) {
+        for(let i = 1; i <= pagesCount; i++) {
             pageItems.push(
                 <Pagination.Item key = {i} onClick = {setPageHandler}>{i}</Pagination.Item>
             );
@@ -68,39 +80,37 @@ function List({transactions, deleteTransaction, editTransaction}) {
 
     function renderTransactions() {
         const pageTransactions = [];
+        const start = (page - 1) * onPage;
+        
         if(keys.length) {
-            for(let i = startItem; i <= startItem + onPage - 1; i++) {
-                const index = i - 1;
-                if(i > keys.length) {
+            let count;
+            for(let i = start; i < start + onPage; i++) {
+                if(i + 1 > keys.length) {
+                    
                     break;
                 }
-                const key = keys[index];
+
+                const key = keys[i];
 
                 pageTransactions.push(
-                    <tr key={transactions[key].TransactionId}>
-                        <td>{transactions[key].TransactionId}</td>
-                        <td>{transactions[key].Status}</td>
-                        <td>{transactions[key].Type}</td>
-                        <td>{transactions[key].ClientName}</td>
-                        <td>${transactions[key].Amount}</td>
-                        <td>
-                            <div className="actions">
-                                <Button
-                                    className = "actionButton editButton"
-                                    variant = "light"
-                                    onClick = {() => editTransactionHandler(key)}
-                                >
-                                    Edit
-                                </Button>
-                                <Button
-                                    className = "actionButton"
-                                    variant = "light"
-                                    onClick = {() => deleteTransactionHandler(key)}
-                                >
-                                    Delete
-                                </Button>
-                            </div>
-                        </td>
+                    <Transaction
+                        key={key}
+                        transaction ={transactions[key]}
+                        editTransaction = {editTransactionHandler}
+                        deleteTransaction = {deleteTransactionHandler}
+                    />
+                );
+                count = i;
+            }
+            for(let i = 0; i < start + onPage - (count + 1); i++) {
+                pageTransactions.push(
+                    <tr key = {"a" + i}>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
                     </tr>
                 );
             }
@@ -128,13 +138,13 @@ function List({transactions, deleteTransaction, editTransaction}) {
                 </tbody>
             </Table>
             <Pagination>
-                <Pagination.First />
-                <Pagination.Prev />
+                <Pagination.First onClick = {firstPage} />
+                <Pagination.Prev onClick = {() => changePage(-1)} />
                 {
                     renderPages()
                 }
-                <Pagination.Next />
-                <Pagination.Last />
+                <Pagination.Next onClick = {() => changePage(1)} />
+                <Pagination.Last onClick = {lastPage} />
             </Pagination>
             {showEdit ? <EditModal
                 show = {showEdit}
